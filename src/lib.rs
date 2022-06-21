@@ -15,17 +15,13 @@
 
 #![no_std]
 
-#[macro_use]
-mod bitflags_ext;
-
 use core::cmp::{min, max};
 use core::iter::{DoubleEndedIterator, FusedIterator, Iterator, TrustedLen};
-use core::num::{NonZeroU16, NonZeroI16};
-use core::ops::{Add, AddAssign, Sub, SubAssign, Neg, Range, Index, IndexMut};
+use core::num::NonZeroI16;
+use core::ops::{Add, AddAssign, Sub, SubAssign, Neg, Index, IndexMut};
 use core::option::{Option};
 use either::{Either, Left, Right};
-use errno_no_std::Errno;
-use enum_derive_2018::{EnumDisplay, EnumFromStr, IterVariants};
+use enum_derive_2018::{EnumDisplay, EnumFromStr};
 use macro_attr_2018::macro_attr;
 use num_traits::Zero;
 #[cfg(test)]
@@ -198,85 +194,6 @@ macro_attr! {
         Right,
         Bottom
     }
-}
-
-macro_attr! {
-    #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy, Ord, PartialOrd)]
-    #[derive(EnumDisplay!, EnumFromStr!)]
-    pub enum Orient {
-        Hor,
-        Vert
-    }
-}
-
-macro_attr! {
-    #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy, Ord, PartialOrd)]
-    #[derive(EnumDisplay!, EnumFromStr!, IterVariants!(ColorVariants))]
-    pub enum Color {
-        Black,
-        Red,
-        Green,
-        Yellow,
-        Blue,
-        Magenta,
-        Cyan,
-        White
-    }
-}
-
-bitflags_ext! {
-    pub struct Attr: u8 {
-        REVERSE = 1 << 0,
-        INTENSITY = 1 << 1,
-    }
-}
-
-#[derive(Eq, PartialEq, Debug, Hash, Clone, Copy, Ord, PartialOrd)]
-pub enum Ctrl {
-    At, A, B, C, D, E, F, G, J, K, L, N,
-    O, P, Q, R, S, T, U, V, W, X, Y, Z,
-    Backslash, Bracket, Caret, Underscore
-}
-
-#[derive(Eq, PartialEq, Debug, Hash, Clone, Copy, Ord, PartialOrd)]
-#[non_exhaustive]
-pub enum Key {
-    Char(char),
-    Alt(char),
-    Ctrl(Ctrl),
-    Enter,
-    Escape,
-    Down,
-    Up,
-    Left,
-    Right,
-    Home,
-    End,
-    Backspace,
-    Delete,
-    Insert,
-    PageDown,
-    PageUp,
-    Tab,
-    F1,
-    F2,
-    F3,
-    F4,
-    F5,
-    F6,
-    F7,
-    F8,
-    F9,
-    F10,
-    F11,
-    F12,
-}
-
-#[derive(Eq, PartialEq, Debug, Hash, Clone, Copy, Ord, PartialOrd)]
-#[non_exhaustive]
-pub enum Event {
-    Resize,
-    Key(NonZeroU16, Key),
 }
 
 #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy)]
@@ -930,23 +847,6 @@ impl Arbitrary for Rect {
         let a = <(Point, Point)>::arbitrary(g);
         Rect::from_tl_br(a.0, a.1)
     }
-}
-
-pub trait Screen {
-    fn size(&self) -> Vector;
-
-    fn out(
-        &mut self,
-        p: Point,
-        fg: Color,
-        bg: Option<Color>,
-        attr: Attr,
-        text: &str,
-        hard: Range<i16>,
-        soft: Range<i16>,
-    ) -> Range<i16>;
-
-    fn update(&mut self, cursor: Option<Point>, wait: bool) -> Result<Option<Event>, Errno>;
 }
 
 #[cfg(test)]
