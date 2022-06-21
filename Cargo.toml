@@ -5,11 +5,11 @@ version = "0.1.0"
 authors = ["warlock <internalmike@gmail.com>"]
 description = "Vectors, points, rectangles, etc. with `i16` coordinates."
 readme = "README.md"
-documentation = "https://docs.rs/tuifw-screen-base/"
-keywords = ["tui", "ncurses", "notcurses", "screen"]
-categories = ["command-line-interface", "no-std"]
+documentation = "https://docs.rs/int-vec-2d/"
+keywords = ["vector", "integer", "affine", "rect", "point"]
+categories = ["data-structures", "no-std"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/A1-Triard/tuifw"
+repository = "https://github.com/A1-Triard/int-vec-2d"
 
 [dependencies]
 enum-derive-2018 = { version = "2.0.0", default-features = false }
