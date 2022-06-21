@@ -1,40 +1,28 @@
 [package]
 edition = "2021"
-name = "tuifw-window"
+name = "tuifw-screen-base"
 version = "0.13.4"
 authors = ["warlock <internalmike@gmail.com>"]
-description = "Text User Interface Framework. Overlappable hierachical windows."
+description = "Text User Interface Framework. Basic platform-independent text screen interface."
 readme = "README.md"
-documentation = "https://docs.rs/tuifw-window/"
-keywords = ["tui", "window"]
-categories = ["command-line-interface"]
+documentation = "https://docs.rs/tuifw-screen-base/"
+keywords = ["tui", "ncurses", "notcurses", "screen"]
+categories = ["command-line-interface", "no-std"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/A1-Triard/tuifw"
 
-[workspace]
-members = [
-    "screen-base",
-    "screen-ncurses",
-    "screen-winapi",
-    "screen",
-    "screen-test",
-]
-exclude = [
-    "ensure_no_std",
-]
-
 [dependencies]
-components-arena = "3.3.0"
-educe = "0.4.18"
+bitflags = "1.3.2"
+enum-derive-2018 = { version = "2.0.0", default-features = false }
+either = { version = "1.6.1", default-features = false }
 errno-no-std = { version = "0.1.0", default-features = false }
 macro-attr-2018 = "2.1.0"
-tuifw-screen-base = { path = "screen-base", version = "0.13.4" }
+num-traits = { version = "0.2.14", default-features = false }
 
 [dev-dependencies]
 panicking = "0.2.0"
-tuifw-screen-test = { path = "screen-test", version = "0.13.4" }
-tuifw-screen = { path = "screen", version = "0.13.4" }
-unicode-width = "0.1.9"
+quickcheck = "1.0.3"
+quickcheck_macros = "1.0.0"
 
 [badges]
 maintenance = { status = "experimental" }
