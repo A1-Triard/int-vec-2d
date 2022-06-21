@@ -1,7 +1,5 @@
 ![maintenance: experimental](https://img.shields.io/badge/maintenance-experimental-blue.svg)
 
-# tuifw-screen-base
+# int-vec-2d
 
-Text User Interface Framework. Intended to abstract over ncurses/notcurses/win console API/DOS text mode/etc.
-
-Basic platform-independent text screen interface. Implementation in [tuifw-screen](https://crates.io/crates/tuifw-screen).
+Vectors, points, rectangles, etc. with `i16` coordinates.
