@@ -2,6 +2,7 @@
 edition = "2021"
 name = "int-vec-2d"
 version = "0.1.1"
+#rust-version = "nightly"
 authors = ["warlock <internalmike@gmail.com>"]
 description = "Vectors, points, rectangles, etc. with `i16` coordinates."
 readme = "README.md"
