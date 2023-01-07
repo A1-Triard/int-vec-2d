@@ -11,5 +11,5 @@ panic = "abort"
 panic = "abort"
 
 [dependencies]
-exit-no-std = "0.1.0"
+exit-no-std = "0.2.0"
 int-vec-2d = { path = ".." }
