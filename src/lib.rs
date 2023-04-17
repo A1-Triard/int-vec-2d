@@ -17,7 +17,7 @@
 
 use core::cmp::{min, max};
 use core::iter::{DoubleEndedIterator, FusedIterator, Iterator, TrustedLen};
-use core::num::NonZeroI16;
+use core::num::{NonZeroI16, NonZeroUsize};
 use core::ops::{Add, AddAssign, Sub, SubAssign, Neg, Index, IndexMut};
 use core::option::{Option};
 use either::{Either, Left, Right};
@@ -142,11 +142,10 @@ impl Iterator for Range1d {
         if self.is_empty() { None } else { Some(self.end) }
     }
 
-    fn advance_by(&mut self, n: usize) -> Result<(), usize> {
-        let len = self.len();
-        if n > len {
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
+        if let Some(rem) = n.checked_sub(self.len()).and_then(NonZeroUsize::new) {
             self.start = self.end;
-            return Err(len);
+            return Err(rem);
         }
         self.start = self.start.wrapping_add(n as u16 as i16);
         Ok(())
@@ -166,11 +165,10 @@ impl DoubleEndedIterator for Range1d {
         }
     }
 
-    fn advance_back_by(&mut self, n: usize) -> Result<(), usize> {
-        let len = self.len();
-        if n > len {
+    fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
+        if let Some(rem) = n.checked_sub(self.len()).and_then(NonZeroUsize::new) {
             self.end = self.start;
-            return Err(len);
+            return Err(rem);
         }
         self.end = self.end.wrapping_sub(n as u16 as i16);
         Ok(())
@@ -662,13 +660,11 @@ impl Iterator for RectPoints {
         if self.rect.is_empty() { None } else { Some(self.rect.br_inner()) }
     }
 
-    fn advance_by(&mut self, n: usize) -> Result<(), usize> {
-        if let Some(size) = self.size_hint().1 {
-            if n > size {
-                self.x = self.rect.l();
-                self.rect.tl = self.rect.bl();
-                return Err(size);
-            }
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
+        if let Some(rem) = self.size_hint().1.and_then(|len| n.checked_sub(len)).and_then(NonZeroUsize::new) {
+            self.x = self.rect.l();
+            self.rect.tl = self.rect.bl();
+            return Err(rem);
         }
         let n = n as u32;
         let current_line_last = self.rect.r().wrapping_sub(self.x) as u16 as u32;
