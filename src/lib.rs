@@ -16,10 +16,9 @@
 #![no_std]
 
 use core::cmp::{min, max};
-use core::iter::{DoubleEndedIterator, FusedIterator, Iterator, TrustedLen};
+use core::iter::{FusedIterator, TrustedLen};
 use core::num::{NonZeroI16, NonZeroUsize};
 use core::ops::{Add, AddAssign, Sub, SubAssign, Neg, Index, IndexMut};
-use core::option::{Option};
 use either::{Either, Left, Right};
 use enum_derive_2018::{EnumDisplay, EnumFromStr};
 use macro_attr_2018::macro_attr;
