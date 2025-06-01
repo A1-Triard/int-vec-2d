@@ -25,6 +25,12 @@ use macro_attr_2018::macro_attr;
 use num_traits::Zero;
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
+#[cfg(feature="serde")]
+use serde::{Serialize, Deserialize, Deserializer};
+#[cfg(feature="serde")]
+use serde::de::Unexpected;
+#[cfg(feature="serde")]
+use serde::de::Error as de_Error;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Range1d {
@@ -183,6 +189,7 @@ impl ExactSizeIterator for Range1d {
 unsafe impl TrustedLen for Range1d { }
 
 macro_attr! {
+    #[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
     #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy, Ord, PartialOrd)]
     #[derive(EnumDisplay!, EnumFromStr!)]
     pub enum Side {
@@ -193,6 +200,7 @@ macro_attr! {
     }
 }
 
+#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy)]
 pub struct Point {
     pub x: i16,
@@ -225,6 +233,7 @@ impl Arbitrary for Point {
     }
 }
 
+#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy)]
 pub struct Vector {
     pub x: i16,
@@ -309,6 +318,7 @@ impl Arbitrary for Vector {
     }
 }
 
+#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy)]
 pub struct VBand {
     pub l: i16,
@@ -341,6 +351,7 @@ impl VBand {
     }
 }
 
+#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy)]
 pub struct HBand {
     pub t: i16,
@@ -373,11 +384,26 @@ impl HBand {
     }
 }
 
+#[cfg(feature="serde")]
+fn deserialize_thickness_value<'de, D>(d: D) -> Result<i32, D::Error> where D: Deserializer<'de> {
+    let value = i32::deserialize(d)?;
+    if value >= -(u16::MAX as u32 as i32) && value <= u16::MAX as u32 as i32 { return Ok(value); }
+    Err(D::Error::invalid_value(
+        Unexpected::Signed(value.into()),
+        &"integer in the -(2¹⁶ - 1) ..= (2¹⁶ - 1) range"
+    ))
+}
+
+#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy, Default)]
 pub struct Thickness {
+    #[cfg_attr(feature="serde", serde(deserialize_with="deserialize_thickness_value"))]
     l: i32,
+    #[cfg_attr(feature="serde", serde(deserialize_with="deserialize_thickness_value"))]
     r: i32,
+    #[cfg_attr(feature="serde", serde(deserialize_with="deserialize_thickness_value"))]
     t: i32,
+    #[cfg_attr(feature="serde", serde(deserialize_with="deserialize_thickness_value"))]
     b: i32,
 }
 
@@ -611,12 +637,14 @@ impl IndexMut<Side> for Thickness {
 }
 
 macro_attr! {
+    #[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
     #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy, Ord, PartialOrd)]
     #[derive(EnumDisplay!, EnumFromStr!)]
     pub enum HAlign { Left, Center, Right }
 }
 
 macro_attr! {
+    #[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
     #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy, Ord, PartialOrd)]
     #[derive(EnumDisplay!, EnumFromStr!)]
     pub enum VAlign { Top, Center, Bottom }
@@ -682,6 +710,7 @@ impl Iterator for RectPoints {
 
 impl FusedIterator for RectPoints { }
 
+#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy)]
 pub struct Rect {
     pub tl: Point,
