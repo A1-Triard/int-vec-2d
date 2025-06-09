@@ -15,10 +15,19 @@
 
 #![no_std]
 
+#[cfg(feature="serde")]
+extern crate alloc;
+
+#[cfg(feature="serde")]
+use alloc::format;
 use core::cmp::{min, max};
+#[cfg(feature="serde")]
+use core::fmt::{self, Formatter};
 use core::iter::{FusedIterator, TrustedLen};
 use core::num::{NonZeroI16, NonZeroUsize};
 use core::ops::{Add, AddAssign, Sub, SubAssign, Neg, Index, IndexMut};
+#[cfg(feature="serde")]
+use core::str::FromStr;
 use either::{Either, Left, Right};
 use enum_derive_2018::{EnumDisplay, EnumFromStr};
 use macro_attr_2018::macro_attr;
@@ -26,9 +35,9 @@ use num_traits::Zero;
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 #[cfg(feature="serde")]
-use serde::{Serialize, Deserialize, Deserializer};
+use serde::{Serialize, Deserialize, Serializer, Deserializer};
 #[cfg(feature="serde")]
-use serde::de::Unexpected;
+use serde::de::{self, Unexpected};
 #[cfg(feature="serde")]
 use serde::de::Error as de_Error;
 
@@ -200,11 +209,66 @@ macro_attr! {
     }
 }
 
-#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy)]
 pub struct Point {
     pub x: i16,
     pub y: i16,
+}
+
+#[cfg(feature="serde")]
+#[derive(Serialize, Deserialize)]
+#[derive(Eq, PartialEq, Debug, Hash, Clone, Copy)]
+#[serde(rename="Point")]
+struct PointNHRSurrogate {
+    x: i16,
+    y: i16,
+}
+
+#[cfg(feature="serde")]
+impl Serialize for Point {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&format!("{},{}", self.x, self.y))
+        } else {
+            PointNHRSurrogate { x: self.x, y: self.y }.serialize(serializer)
+        }
+    }
+}
+
+#[cfg(feature="serde")]
+struct PointHRDeVisitor;
+
+#[cfg(feature="serde")]
+impl<'de> de::Visitor<'de> for PointHRDeVisitor {
+    type Value = Point;
+
+    fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+        write!(formatter, "two i16 separated by comma")
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> where E: de::Error {
+        let mut parts = v.split(',');
+        let x = parts.next().ok_or_else(|| E::invalid_value(Unexpected::Str(v), &self))?;
+        let y = parts.next().ok_or_else(|| E::invalid_value(Unexpected::Str(v), &self))?;
+        if parts.next().is_some() {
+            return Err(E::invalid_value(Unexpected::Str(v), &self));
+        }
+        let x = i16::from_str(x).map_err(|_| E::invalid_value(Unexpected::Str(v), &self))?;
+        let y = i16::from_str(y).map_err(|_| E::invalid_value(Unexpected::Str(v), &self))?;
+        Ok(Point { x, y })
+    }
+}
+
+#[cfg(feature="serde")]
+impl<'de> Deserialize<'de> for Point {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
+        if deserializer.is_human_readable() {
+            deserializer.deserialize_str(PointHRDeVisitor)
+        } else {
+            let p = PointNHRSurrogate::deserialize(deserializer)?;
+            Ok(Point { x: p.x, y: p.y })
+        }
+    }
 }
 
 impl Point {
@@ -233,11 +297,66 @@ impl Arbitrary for Point {
     }
 }
 
-#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy)]
 pub struct Vector {
     pub x: i16,
     pub y: i16,
+}
+
+#[cfg(feature="serde")]
+#[derive(Serialize, Deserialize)]
+#[derive(Eq, PartialEq, Debug, Hash, Clone, Copy)]
+#[serde(rename="Vector")]
+struct VectorNHRSurrogate {
+    x: i16,
+    y: i16,
+}
+
+#[cfg(feature="serde")]
+impl Serialize for Vector {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&format!("{},{}", self.x, self.y))
+        } else {
+            VectorNHRSurrogate { x: self.x, y: self.y }.serialize(serializer)
+        }
+    }
+}
+
+#[cfg(feature="serde")]
+struct VectorHRDeVisitor;
+
+#[cfg(feature="serde")]
+impl<'de> de::Visitor<'de> for VectorHRDeVisitor {
+    type Value = Vector;
+
+    fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+        write!(formatter, "two i16 separated by comma")
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> where E: de::Error {
+        let mut parts = v.split(',');
+        let x = parts.next().ok_or_else(|| E::invalid_value(Unexpected::Str(v), &self))?;
+        let y = parts.next().ok_or_else(|| E::invalid_value(Unexpected::Str(v), &self))?;
+        if parts.next().is_some() {
+            return Err(E::invalid_value(Unexpected::Str(v), &self));
+        }
+        let x = i16::from_str(x).map_err(|_| E::invalid_value(Unexpected::Str(v), &self))?;
+        let y = i16::from_str(y).map_err(|_| E::invalid_value(Unexpected::Str(v), &self))?;
+        Ok(Vector { x, y })
+    }
+}
+
+#[cfg(feature="serde")]
+impl<'de> Deserialize<'de> for Vector {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
+        if deserializer.is_human_readable() {
+            deserializer.deserialize_str(VectorHRDeVisitor)
+        } else {
+            let p = VectorNHRSurrogate::deserialize(deserializer)?;
+            Ok(Vector { x: p.x, y: p.y })
+        }
+    }
 }
 
 impl Vector {
@@ -394,17 +513,90 @@ fn deserialize_thickness_value<'de, D>(d: D) -> Result<i32, D::Error> where D: D
     ))
 }
 
-#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 #[derive(Eq, PartialEq, Debug, Hash, Clone, Copy, Default)]
 pub struct Thickness {
-    #[cfg_attr(feature="serde", serde(deserialize_with="deserialize_thickness_value"))]
     l: i32,
-    #[cfg_attr(feature="serde", serde(deserialize_with="deserialize_thickness_value"))]
     r: i32,
-    #[cfg_attr(feature="serde", serde(deserialize_with="deserialize_thickness_value"))]
     t: i32,
-    #[cfg_attr(feature="serde", serde(deserialize_with="deserialize_thickness_value"))]
     b: i32,
+}
+
+#[cfg(feature="serde")]
+#[derive(Serialize, Deserialize)]
+#[derive(Eq, PartialEq, Debug, Hash, Clone, Copy)]
+#[serde(rename="Thickness")]
+struct ThicknessNHRSurrogate {
+    #[serde(deserialize_with="deserialize_thickness_value")]
+    l: i32,
+    #[serde(deserialize_with="deserialize_thickness_value")]
+    t: i32,
+    #[serde(deserialize_with="deserialize_thickness_value")]
+    r: i32,
+    #[serde(deserialize_with="deserialize_thickness_value")]
+    b: i32,
+}
+
+#[cfg(feature="serde")]
+impl Serialize for Thickness {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&format!("{},{},{},{}", self.l, self.t, self.r, self.b))
+        } else {
+            ThicknessNHRSurrogate { l: self.l, t: self.t, r: self.r, b: self.b }.serialize(serializer)
+        }
+    }
+}
+
+#[cfg(feature="serde")]
+struct ThicknessHRDeVisitor;
+
+#[cfg(feature="serde")]
+impl<'de> de::Visitor<'de> for ThicknessHRDeVisitor {
+    type Value = Thickness;
+
+    fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+        write!(formatter, "four integers in the -(2¹⁶ - 1) ..= (2¹⁶ - 1) range separated by comma")
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> where E: de::Error {
+        let mut parts = v.split(',');
+        let l = parts.next().ok_or_else(|| E::invalid_value(Unexpected::Str(v), &self))?;
+        let t = parts.next().ok_or_else(|| E::invalid_value(Unexpected::Str(v), &self))?;
+        let r = parts.next().ok_or_else(|| E::invalid_value(Unexpected::Str(v), &self))?;
+        let b = parts.next().ok_or_else(|| E::invalid_value(Unexpected::Str(v), &self))?;
+        if parts.next().is_some() {
+            return Err(E::invalid_value(Unexpected::Str(v), &self));
+        }
+        let l = i32::from_str(l).map_err(|_| E::invalid_value(Unexpected::Str(v), &self))?;
+        let t = i32::from_str(t).map_err(|_| E::invalid_value(Unexpected::Str(v), &self))?;
+        let r = i32::from_str(r).map_err(|_| E::invalid_value(Unexpected::Str(v), &self))?;
+        let b = i32::from_str(b).map_err(|_| E::invalid_value(Unexpected::Str(v), &self))?;
+        if l < -(u16::MAX as u32 as i32) || l > u16::MAX as u32 as i32 {
+            return Err(E::invalid_value(Unexpected::Str(v), &self));
+        }
+        if t < -(u16::MAX as u32 as i32) || t > u16::MAX as u32 as i32 {
+            return Err(E::invalid_value(Unexpected::Str(v), &self));
+        }
+        if r < -(u16::MAX as u32 as i32) || r > u16::MAX as u32 as i32 {
+            return Err(E::invalid_value(Unexpected::Str(v), &self));
+        }
+        if b < -(u16::MAX as u32 as i32) || b > u16::MAX as u32 as i32 {
+            return Err(E::invalid_value(Unexpected::Str(v), &self));
+        }
+        Ok(Thickness::new(l, t, r, b))
+    }
+}
+
+#[cfg(feature="serde")]
+impl<'de> Deserialize<'de> for Thickness {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
+        if deserializer.is_human_readable() {
+            deserializer.deserialize_str(ThicknessHRDeVisitor)
+        } else {
+            let p = ThicknessNHRSurrogate::deserialize(deserializer)?;
+            Ok(Thickness::new(p.l, p.t, p.r, p.b))
+        }
+    }
 }
 
 impl Thickness {
