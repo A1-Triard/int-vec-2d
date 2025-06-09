@@ -5,7 +5,7 @@
 
 #[cfg(windows)]
 #[link(name="msvcrt")]
-extern { }
+extern "C" { }
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
