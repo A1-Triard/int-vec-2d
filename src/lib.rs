@@ -713,6 +713,20 @@ impl Thickness {
         (-self).shrink_rect(rect)
     }
 
+    pub fn shrink_optional_rect_size(
+        self, rect_width: Option<i16>, rect_height: Option<i16>
+    ) -> (Option<i16>, Option<i16>) {
+        let size = self.shrink_rect_size(Vector { x: rect_width.unwrap_or(0), y: rect_height.unwrap_or(0) });
+        (rect_width.map(|_| size.x), rect_height.map(|_| size.y))
+    }
+
+    pub fn expand_optional_rect_size(
+        self, rect_width: Option<i16>, rect_height: Option<i16>
+    ) -> (Option<i16>, Option<i16>) {
+        let size = self.expand_rect_size(Vector { x: rect_width.unwrap_or(0), y: rect_height.unwrap_or(0) });
+        (rect_width.map(|_| size.x), rect_height.map(|_| size.y))
+    }
+
     pub fn shrink_rect_size(self, rect_size: Vector) -> Vector {
         self.shrink_rect(Rect { tl: Point { x: 0, y: 0 }, size: rect_size }).size
     }
